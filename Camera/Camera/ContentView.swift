@@ -4,8 +4,9 @@ import UIKit
 
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
-    @State private var isAnalyzing = false
-    @State private var analysisResult = "Press Start to begin analysis"
+    @StateObject private var speechManager = SpeechManager()
+    @State private var analysisResult = "Press Capture to analyze an image"
+    @State private var isProcessing = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -15,21 +16,37 @@ struct ContentView: View {
                 .cornerRadius(10)
                 .padding(.horizontal)
             
-            // Start/Stop Button
-            Button(action: {
-                if isAnalyzing {
-                    stopAnalysis()
-                } else {
-                    startAnalysis()
+            // Control Buttons
+            HStack(spacing: 20) {
+                // Capture Button
+                Button(action: {
+                    captureAndAnalyze()
+                }) {
+                    Text(isProcessing ? "Processing..." : "Capture & Analyze")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(width: 180)
+                        .background(isProcessing ? Color.gray : Color.blue)
+                        .cornerRadius(10)
                 }
-            }) {
-                Text(isAnalyzing ? "Stop Analysis" : "Start Analysis")
-                    .font(.title2)
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(width: 200)
-                    .background(isAnalyzing ? Color.red : Color.blue)
-                    .cornerRadius(10)
+                .disabled(isProcessing)
+                
+                // Speech Button
+                Button(action: {
+                    if speechManager.isSpeaking {
+                        speechManager.stopSpeaking()
+                    } else {
+                        speechManager.speak(text: analysisResult)
+                    }
+                }) {
+                    Image(systemName: speechManager.isSpeaking ? "speaker.slash.fill" : "speaker.2.fill")
+                        .font(.title)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(speechManager.isSpeaking ? Color.red : Color.green)
+                        .cornerRadius(10)
+                }
             }
             
             // Analysis Result
@@ -47,28 +64,18 @@ struct ContentView: View {
         .padding(.top)
     }
     
-    private func startAnalysis() {
-        isAnalyzing = true
-        analysisResult = "Starting analysis..."
+    private func captureAndAnalyze() {
+        guard !isProcessing else { return }
         
-        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
-            if !isAnalyzing {
-                timer.invalidate()
-                return
-            }
-            
-            Task {
-                await captureAndAnalyze()
-            }
+        isProcessing = true
+        analysisResult = "Capturing and analyzing image..."
+        
+        Task {
+            await performImageAnalysis()
         }
     }
     
-    private func stopAnalysis() {
-        isAnalyzing = false
-        analysisResult = "Analysis stopped"
-    }
-    
-    private func captureAndAnalyze() async {
+    private func performImageAnalysis() async {
         let image: UIImage
         
         #if targetEnvironment(simulator)
@@ -79,6 +86,7 @@ struct ContentView: View {
         guard let capturedImage = cameraManager.captureImage() else {
             DispatchQueue.main.async {
                 self.analysisResult = "Failed to capture image"
+                self.isProcessing = false
             }
             return
         }
@@ -98,13 +106,13 @@ struct ContentView: View {
         UIColor.lightGray.setFill()
         UIRectFill(rect)
         
-        let text = "Test Image\nSimulator Mode"
+        let text = "Test Image\nSimulator Mode\nThis is a sample analysis result."
         let attributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 20),
+            .font: UIFont.systemFont(ofSize: 16),
             .foregroundColor: UIColor.black
         ]
         
-        let textRect = CGRect(x: 50, y: 70, width: 200, height: 60)
+        let textRect = CGRect(x: 20, y: 50, width: 260, height: 100)
         text.draw(in: textRect, withAttributes: attributes)
         
         let image = UIGraphicsGetImageFromCurrentImageContext()
@@ -117,6 +125,7 @@ struct ContentView: View {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             DispatchQueue.main.async {
                 self.analysisResult = "Failed to convert image to data"
+                self.isProcessing = false
             }
             return
         }
@@ -131,7 +140,7 @@ struct ContentView: View {
                     "content": [
                         [
                             "type": "text",
-                            "text": "Describe what you see in this image."
+                            "text": "Describe what you see in this image in detail."
                         ],
                         [
                             "type": "image_url",
@@ -149,6 +158,7 @@ struct ContentView: View {
         guard let url = URL(string: "http://192.168.68.63:8080/v1/chat/completions") else {
             DispatchQueue.main.async {
                 self.analysisResult = "Invalid URL"
+                self.isProcessing = false
             }
             return
         }
@@ -173,21 +183,80 @@ struct ContentView: View {
                     
                     DispatchQueue.main.async {
                         self.analysisResult = content
+                        self.isProcessing = false
+                        // Automatically speak the result
+                        self.speechManager.speak(text: content)
                     }
                 } else {
                     DispatchQueue.main.async {
                         self.analysisResult = "Failed to parse response"
+                        self.isProcessing = false
                     }
                 }
             } else {
                 DispatchQueue.main.async {
                     self.analysisResult = "Server error: \((response as? HTTPURLResponse)?.statusCode ?? 0)"
+                    self.isProcessing = false
                 }
             }
         } catch {
             DispatchQueue.main.async {
                 self.analysisResult = "Network error: \(error.localizedDescription)"
+                self.isProcessing = false
             }
+        }
+    }
+}
+
+// MARK: - Speech Manager
+class SpeechManager: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
+    private let synthesizer = AVSpeechSynthesizer()
+    @Published var isSpeaking = false
+    
+    override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
+    
+    func speak(text: String) {
+        // Stop any current speech
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
+        
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.rate = 0.5 // Adjust speech rate (0.0 to 1.0)
+        utterance.pitchMultiplier = 1.0 // Adjust pitch (0.5 to 2.0)
+        utterance.volume = 0.8 // Adjust volume (0.0 to 1.0)
+        
+        // Use default voice or specify a particular voice
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        
+        synthesizer.speak(utterance)
+        isSpeaking = true
+    }
+    
+    func stopSpeaking() {
+        synthesizer.stopSpeaking(at: .immediate)
+        isSpeaking = false
+    }
+    
+    // MARK: - AVSpeechSynthesizerDelegate
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+        DispatchQueue.main.async {
+            self.isSpeaking = true
+        }
+    }
+    
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        DispatchQueue.main.async {
+            self.isSpeaking = false
+        }
+    }
+    
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        DispatchQueue.main.async {
+            self.isSpeaking = false
         }
     }
 }
