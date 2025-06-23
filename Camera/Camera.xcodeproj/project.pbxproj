@@ -415,6 +415,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Camera/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to capture images for AI-powered visual analysis";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs location access to save GPS coordinates with your photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -445,6 +446,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Camera/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app uses the camera to capture images for AI-powered visual analysis";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs location access to save GPS coordinates with your photos.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

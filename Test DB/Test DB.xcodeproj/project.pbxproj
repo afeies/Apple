@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		9267B1A02E04E88B00853883 /* DataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 9267B19E2E04E88B00853883 /* DataModel.xcdatamodeld */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		9267B1822E04E4F400853883 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		9267B1742E04E4F300853883 /* Test DB.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Test DB.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9267B1812E04E4F400853883 /* Test DBTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Test DBTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9267B18B2E04E4F400853883 /* Test DBUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Test DBUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		9267B19F2E04E88B00853883 /* DataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = DataModel.xcdatamodel; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -75,6 +80,7 @@
 		9267B16B2E04E4F200853883 = {
 			isa = PBXGroup;
 			children = (
+				9267B19E2E04E88B00853883 /* DataModel.xcdatamodeld */,
 				9267B1762E04E4F300853883 /* Test DB */,
 				9267B1842E04E4F400853883 /* Test DBTests */,
 				9267B18E2E04E4F400853883 /* Test DBUITests */,
@@ -236,6 +242,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9267B1A02E04E88B00853883 /* DataModel.xcdatamodeld in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -400,6 +407,8 @@
 				DEVELOPMENT_TEAM = X548HRS5MM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos for your items.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs location access to save GPS coordinates with your items.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +437,8 @@
 				DEVELOPMENT_TEAM = X548HRS5MM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to take photos for your items.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app needs location access to save GPS coordinates with your items.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -558,6 +569,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		9267B19E2E04E88B00853883 /* DataModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				9267B19F2E04E88B00853883 /* DataModel.xcdatamodel */,
+			);
+			currentVersion = 9267B19F2E04E88B00853883 /* DataModel.xcdatamodel */;
+			path = DataModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 9267B16C2E04E4F200853883 /* Project object */;
 }

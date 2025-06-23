@@ -1,11 +1,17 @@
 import SwiftUI
 import UIKit
+import CoreData
 
 struct ContentView: View {
     @StateObject private var cameraManager = CameraManager()
     @StateObject private var speechManager = SpeechManager()
+    @StateObject private var locationManager = LocationManager()
+    @EnvironmentObject var coreDataManager: CoreDataManager
+    @Environment(\.managedObjectContext) private var viewContext
+    
     @State private var analysisResult = "Press Capture to analyze an image"
     @State private var isProcessing = false
+    @State private var showingSearchView = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -59,8 +65,34 @@ struct ContentView: View {
             }
             
             Spacer()
+            
+            // Search Database Button
+            Button(action: {
+                showingSearchView = true
+            }) {
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .font(.title2)
+                    Text("Search Database")
+                        .font(.title2)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(.white)
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.orange)
+                .cornerRadius(10)
+                .padding(.horizontal)
+            }
+            .padding(.bottom)
         }
         .padding(.top)
+        .sheet(isPresented: $showingSearchView) {
+            SearchView()
+        }
+        .onAppear {
+            locationManager.requestLocationPermission()
+        }
     }
     
     private func captureAndAnalyze() {
@@ -183,6 +215,10 @@ struct ContentView: View {
                     DispatchQueue.main.async {
                         self.analysisResult = content
                         self.isProcessing = false
+                        
+                        // Save to Core Data
+                        self.saveToDatabase(image: image, analysis: content)
+                        
                         // Automatically speak the result
                         self.speechManager.speak(text: content)
                     }
@@ -205,8 +241,20 @@ struct ContentView: View {
             }
         }
     }
+    
+    private func saveToDatabase(image: UIImage, analysis: String) {
+        let gpsString = locationManager.getCurrentLocationString()
+        
+        let _ = coreDataManager.createPhotoEntry(
+            text: analysis,
+            gps: gpsString,
+            image: image.jpegData(compressionQuality: 0.8)
+        )
+    }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(CoreDataManager.shared)
+        .environment(\.managedObjectContext, CoreDataManager.shared.context)
 }
