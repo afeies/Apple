@@ -18,6 +18,11 @@ class CoreDataManager: ObservableObject {
                 fatalError("Core Data store failed to load: \(error.localizedDescription)")
             }
         }
+        
+        // Configure the context for better performance
+        container.viewContext.automaticallyMergesChangesFromParent = true
+        container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        
         return container
     }()
     
@@ -28,12 +33,14 @@ class CoreDataManager: ObservableObject {
     private init() {}
     
     func save() {
-        if context.hasChanges {
-            do {
-                try context.save()
-            } catch {
-                print("Error saving context: \(error)")
-            }
+        guard context.hasChanges else { return }
+        
+        do {
+            try context.save()
+        } catch {
+            print("Error saving context: \(error)")
+            // Rollback changes on error
+            context.rollback()
         }
     }
     
@@ -49,18 +56,44 @@ class CoreDataManager: ObservableObject {
         }
     }
     
-    func createPhotoEntry(text: String?, gps: String?, image: Data?) -> PhotoEntry {
+    func createPhotoEntry(text: String?, gps: String?, image: Data?) -> PhotoEntry? {
         let entry = PhotoEntry(context: context)
         entry.text = text
         entry.gps = gps
         entry.image = image
         entry.timestamp = Date()
-        save()
-        return entry
+        
+        do {
+            try context.save()
+            return entry
+        } catch {
+            print("Error creating photo entry: \(error)")
+            context.rollback()
+            return nil
+        }
     }
     
     func deletePhotoEntry(_ entry: PhotoEntry) {
         context.delete(entry)
-        save()
+        
+        do {
+            try context.save()
+        } catch {
+            print("Error deleting photo entry: \(error)")
+            context.rollback()
+        }
+    }
+    
+    func performSearch(searchText: String) -> [PhotoEntry] {
+        let request: NSFetchRequest<PhotoEntry> = PhotoEntry.fetchRequest()
+        request.predicate = NSPredicate(format: "text CONTAINS[cd] %@", searchText)
+        request.sortDescriptors = [NSSortDescriptor(keyPath: \PhotoEntry.timestamp, ascending: false)]
+        
+        do {
+            return try context.fetch(request)
+        } catch {
+            print("Error performing search: \(error)")
+            return []
+        }
     }
 } 

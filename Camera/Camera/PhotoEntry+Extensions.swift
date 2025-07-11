@@ -19,12 +19,12 @@ extension PhotoEntry {
     }
     
     var uiImage: UIImage? {
-        guard let imageData = image else { return nil }
+        guard let imageData = image, !imageData.isEmpty else { return nil }
         return UIImage(data: imageData)
     }
     
     var gpsCoordinates: (latitude: Double, longitude: Double)? {
-        guard let gpsString = gps else { return nil }
+        guard let gpsString = gps, !gpsString.isEmpty else { return nil }
         let components = gpsString.components(separatedBy: ",")
         guard components.count == 2,
               let latitude = Double(components[0].trimmingCharacters(in: .whitespaces)),
@@ -39,6 +39,25 @@ extension PhotoEntry {
     }
     
     func setImage(_ image: UIImage) {
-        self.image = image.jpegData(compressionQuality: 0.8)
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            print("Failed to convert image to JPEG data")
+            return
+        }
+        self.image = imageData
+    }
+    
+    // Safe text access
+    var safeText: String {
+        return text ?? ""
+    }
+    
+    // Safe GPS access
+    var safeGPS: String {
+        return gps ?? ""
+    }
+    
+    // Check if entry has valid data
+    var hasValidData: Bool {
+        return !safeText.isEmpty || uiImage != nil || !safeGPS.isEmpty
     }
 } 

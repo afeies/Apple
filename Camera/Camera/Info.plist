@@ -4,5 +4,9 @@
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs location access to save GPS coordinates with your photos.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app needs speech recognition to enable voice search functionality.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access to enable voice search functionality.</string>
 </dict>
 </plist>
