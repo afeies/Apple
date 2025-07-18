@@ -9,6 +9,35 @@ import SwiftUI
 import RealityKit
 import RealityKitContent
 
+struct DraggableShape<Content: View>: View {
+    @State private var offset: CGSize = .zero
+    let content: () -> Content
+    var body: some View {
+        content()
+            .offset(offset)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in offset = value.translation }
+            )
+    }
+}
+
+struct DraggableRealityView: View {
+    @State private var offset: CGSize = .zero
+    let entityBuilder: () -> ModelEntity
+    var body: some View {
+        RealityView { content in
+            let entity = entityBuilder()
+            content.add(entity)
+        }
+        .offset(offset)
+        .gesture(
+            DragGesture()
+                .onChanged { value in offset = value.translation }
+        )
+    }
+}
+
 struct ContentView: View {
 
     var body: some View {
@@ -18,33 +47,30 @@ struct ContentView: View {
                 .padding()
             // Simple 2D shapes
             HStack(spacing: 30) {
-                Circle()
-                    .fill(Color.blue)
-                    .frame(width: 100, height: 100)
-                Rectangle()
-                    .fill(Color.green)
-                    .frame(width: 100, height: 100)
-                RoundedRectangle(cornerRadius: 25)
-                    .fill(Color.orange)
-                    .frame(width: 100, height: 100)
+                DraggableShape {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 100, height: 100)
+                }
+                DraggableShape {
+                    Rectangle()
+                        .fill(Color.green)
+                        .frame(width: 100, height: 100)
+                }
+                DraggableShape {
+                    RoundedRectangle(cornerRadius: 25)
+                        .fill(Color.orange)
+                        .frame(width: 100, height: 100)
+                }
             }
             // Simple 3D shapes
-            HStack(spacing: 30) {
-                // Sphere from asset bundle
-                Model3D(named: "Scene", bundle: realityKitContentBundle)
-                    .frame(width: 100, height: 100)
-                // Box primitive
-                RealityView { content in
-                    let box = ModelEntity(mesh: .generateBox(size: 0.1))
-                    content.add(box)
+            HStack {
+                Spacer()
+                DraggableShape {
+                    Model3D(named: "Scene", bundle: realityKitContentBundle)
+                        .frame(width: 100, height: 100)
                 }
-                .frame(width: 100, height: 100)
-                // Plane primitive (flat rectangle)
-                RealityView { content in
-                    let plane = ModelEntity(mesh: .generatePlane(width: 0.12, depth: 0.08))
-                    content.add(plane)
-                }
-                .frame(width: 100, height: 100)
+                Spacer()
             }
             Spacer()
         }
