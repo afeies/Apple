@@ -6,91 +6,70 @@
 //
 
 import SwiftUI
-import RealityKit
-import RealityKitContent
-
-struct DraggableShape<Content: View>: View {
-    @State private var offset: CGSize = .zero
-    @State private var scale: CGFloat = 1.0
-    let content: () -> Content
-    var body: some View {
-        content()
-            .offset(offset)
-            .scaleEffect(scale)
-            .gesture(
-                DragGesture()
-                    .onChanged { value in offset = value.translation }
-            )
-            .gesture(
-                MagnificationGesture()
-                    .onChanged { value in scale = value }
-            )
-    }
-}
-
-struct DraggableRealityView: View {
-    @State private var offset: CGSize = .zero
-    @State private var scale: CGFloat = 1.0
-    let entityBuilder: () -> ModelEntity
-    var body: some View {
-        RealityView { content in
-            let entity = entityBuilder()
-            content.add(entity)
-        }
-        .offset(offset)
-        .scaleEffect(scale)
-        .gesture(
-            DragGesture()
-                .onChanged { value in offset = value.translation }
-        )
-        .gesture(
-            MagnificationGesture()
-                .onChanged { value in scale = value }
-        )
-    }
-}
 
 struct ContentView: View {
-
+    @State private var rectangles: [RectangleData] = []
+    @State private var windowSize: CGSize = CGSize(width: 400, height: 600) // Default size
+    
     var body: some View {
         VStack(spacing: 20) {
             Text("Welcome to VPHello!")
                 .font(.largeTitle)
                 .padding()
-            // Simple 2D shapes
-            HStack(spacing: 30) {
-                DraggableShape {
-                    Circle()
-                        .fill(Color.blue)
-                        .frame(width: 100, height: 100)
-                }
-                DraggableShape {
-                    Rectangle()
-                        .fill(Color.green)
-                        .frame(width: 100, height: 100)
-                }
-                DraggableShape {
-                    RoundedRectangle(cornerRadius: 25)
-                        .fill(Color.orange)
-                        .frame(width: 100, height: 100)
-                }
+            
+            Button("Add Note") {
+                let centerX = windowSize.width / 2
+                let centerY = windowSize.height / 2
+                let newRectangle = RectangleData(
+                    id: UUID(),
+                    position: CGPoint(x: centerX, y: centerY),
+                    size: CGSize(width: 200, height: 150)
+                )
+                rectangles.append(newRectangle)
             }
-            // Simple 3D shapes
-            HStack {
-                Spacer()
-                DraggableShape {
-                    Model3D(named: "Scene", bundle: realityKitContentBundle)
-                        .frame(width: 100, height: 100)
+            .font(.headline)
+            .padding()
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            
+            ScrollView {
+                ZStack {
+                    ForEach(rectangles) { rectangle in
+                        Rectangle()
+                            .fill(Color.white)
+                            .frame(width: rectangle.size.width, height: rectangle.size.height)
+                            .position(rectangle.position)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
+                                            rectangles[index].position = value.location
+                                        }
+                                    }
+                            )
+                    }
                 }
-                Spacer()
+                .frame(minHeight: 600)
             }
+            .background(GeometryReader { geometry in
+                Color.clear.onAppear {
+                    windowSize = geometry.size
+                }
+            })
+            
             Spacer()
         }
         .padding()
     }
 }
 
+struct RectangleData: Identifiable {
+    let id: UUID
+    var position: CGPoint
+    var size: CGSize
+}
+
 #Preview(windowStyle: .automatic) {
     ContentView()
-        .environment(AppModel())
 }
