@@ -11,19 +11,26 @@ import RealityKitContent
 
 struct DraggableShape<Content: View>: View {
     @State private var offset: CGSize = .zero
+    @State private var scale: CGFloat = 1.0
     let content: () -> Content
     var body: some View {
         content()
             .offset(offset)
+            .scaleEffect(scale)
             .gesture(
                 DragGesture()
                     .onChanged { value in offset = value.translation }
+            )
+            .gesture(
+                MagnificationGesture()
+                    .onChanged { value in scale = value }
             )
     }
 }
 
 struct DraggableRealityView: View {
     @State private var offset: CGSize = .zero
+    @State private var scale: CGFloat = 1.0
     let entityBuilder: () -> ModelEntity
     var body: some View {
         RealityView { content in
@@ -31,9 +38,14 @@ struct DraggableRealityView: View {
             content.add(entity)
         }
         .offset(offset)
+        .scaleEffect(scale)
         .gesture(
             DragGesture()
                 .onChanged { value in offset = value.translation }
+        )
+        .gesture(
+            MagnificationGesture()
+                .onChanged { value in scale = value }
         )
     }
 }
