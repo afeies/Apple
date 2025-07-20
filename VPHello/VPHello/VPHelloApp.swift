@@ -9,25 +9,15 @@ import SwiftUI
 
 @main
 struct VPHelloApp: App {
-
-    @State private var appModel = AppModel()
+    @State private var windowCount: Int = 1
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .environment(appModel)
+        WindowGroup("Note Window", id: "main") {
+            ContentView(windowCount: $windowCount)
         }
-
-        ImmersiveSpace(id: appModel.immersiveSpaceID) {
-            ImmersiveView()
-                .environment(appModel)
-                .onAppear {
-                    appModel.immersiveSpaceState = .open
-                }
-                .onDisappear {
-                    appModel.immersiveSpaceState = .closed
-                }
+        
+        WindowGroup("Note Window", id: "noteWindow") {
+            NoteWindowView(windowID: windowCount)
         }
-        .immersionStyle(selection: .constant(.mixed), in: .mixed)
-     }
+    }
 }
