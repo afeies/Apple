@@ -203,6 +203,13 @@ struct NoteWindowView: View {
     @State private var windowSize: CGSize = CGSize(width: 400, height: 600)
     @State private var selectedNoteID: UUID? = nil
     @Environment(\.openWindow) private var openWindow
+    // Voice recognition state
+    @State private var isRecording = false
+    @State private var recognizedText = ""
+    @State private var speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
+    @State private var audioEngine = AVAudioEngine()
+    @State private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
+    @State private var recognitionTask: SFSpeechRecognitionTask?
     
     var body: some View {
         VStack(spacing: 20) {
@@ -237,6 +244,37 @@ struct NoteWindowView: View {
                 .cornerRadius(10)
             }
             
+            // Voice Recognition Section
+            VStack(spacing: 15) {
+                Button(isRecording ? "Stop Recording" : "Tap to Speak") {
+                    if isRecording {
+                        stopRecording()
+                    } else {
+                        startRecording()
+                    }
+                }
+                .font(.headline)
+                .padding()
+                .background(isRecording ? Color.red : Color.orange)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                if !recognizedText.isEmpty {
+                    Text("Recognized Text:")
+                        .font(.headline)
+                        .padding(.top)
+                    
+                    Text(recognizedText)
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .cornerRadius(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding()
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
+            
             ScrollView {
                 ZStack {
                     ForEach(rectangles) { rectangle in
@@ -269,6 +307,82 @@ struct NoteWindowView: View {
             Spacer()
         }
         .padding()
+    }
+    
+    private func startRecording() {
+        guard let speechRecognizer = speechRecognizer, speechRecognizer.isAvailable else {
+            print("Speech recognizer not available")
+            return
+        }
+        
+        // Reset audio engine
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        
+        // Configure audio session
+        let audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(.record, mode: .measurement, options: [])
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("Failed to configure audio session: \(error)")
+            return
+        }
+        
+        // Create recognition request
+        recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+        guard let recognitionRequest = recognitionRequest else {
+            print("Failed to create recognition request")
+            return
+        }
+        recognitionRequest.shouldReportPartialResults = true
+        
+        // Configure audio input
+        let inputNode = audioEngine.inputNode
+        let recordingFormat = inputNode.outputFormat(forBus: 0)
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, _ in
+            recognitionRequest.append(buffer)
+        }
+        
+        // Start recognition
+        recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest) { result, error in
+            if let result = result {
+                DispatchQueue.main.async {
+                    self.recognizedText = result.bestTranscription.formattedString
+                }
+            }
+            
+            if error != nil {
+                DispatchQueue.main.async {
+                    self.stopRecording()
+                }
+            }
+        }
+        
+        // Start audio engine
+        do {
+            audioEngine.prepare()
+            try audioEngine.start()
+            isRecording = true
+        } catch {
+            print("Failed to start audio engine: \(error)")
+            stopRecording()
+        }
+    }
+    
+    private func stopRecording() {
+        audioEngine.stop()
+        audioEngine.inputNode.removeTap(onBus: 0)
+        recognitionRequest?.endAudio()
+        recognitionTask?.cancel()
+        isRecording = false
+        
+        // Deactivate audio session
+        do {
+            try AVAudioSession.sharedInstance().setActive(false)
+        } catch {
+            print("Failed to deactivate audio session: \(error)")
+        }
     }
 }
 
