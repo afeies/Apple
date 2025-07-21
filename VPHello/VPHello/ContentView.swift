@@ -202,6 +202,7 @@ struct NoteWindowView: View {
     @State private var rectangles: [RectangleData] = []
     @State private var windowSize: CGSize = CGSize(width: 400, height: 600)
     @State private var selectedNoteID: UUID? = nil
+    @Environment(\.openWindow) private var openWindow
     
     var body: some View {
         VStack(spacing: 20) {
@@ -209,21 +210,32 @@ struct NoteWindowView: View {
                 .font(.largeTitle)
                 .padding()
             
-            Button("Add Note") {
-                let centerX = windowSize.width / 2
-                let centerY = windowSize.height / 2
-                let newRectangle = RectangleData(
-                    id: UUID(),
-                    position: CGPoint(x: centerX, y: centerY),
-                    size: CGSize(width: 200, height: 150)
-                )
-                rectangles.append(newRectangle)
+            HStack(spacing: 15) {
+                Button("Add Note") {
+                    let centerX = windowSize.width / 2
+                    let centerY = windowSize.height / 2
+                    let newRectangle = RectangleData(
+                        id: UUID(),
+                        position: CGPoint(x: centerX, y: centerY),
+                        size: CGSize(width: 200, height: 150)
+                    )
+                    rectangles.append(newRectangle)
+                }
+                .font(.headline)
+                .padding()
+                .background(Color.blue)
+                .foregroundColor(.white)
+                .cornerRadius(10)
+                
+                Button("New Window") {
+                    openWindow(id: "noteWindow")
+                }
+                .font(.headline)
+                .padding()
+                .background(Color.green)
+                .foregroundColor(.white)
+                .cornerRadius(10)
             }
-            .font(.headline)
-            .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(10)
             
             ScrollView {
                 ZStack {
