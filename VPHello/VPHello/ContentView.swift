@@ -71,37 +71,6 @@ struct ContentView: View {
                 .cornerRadius(10)
             }
             
-            // Voice Recognition Section
-            VStack(spacing: 15) {
-                Button(isRecording ? "Stop Recording" : "Tap to Speak") {
-                    if isRecording {
-                        stopRecording()
-                    } else {
-                        startRecording()
-                    }
-                }
-                .font(.headline)
-                .padding()
-                .background(isRecording ? Color.red : Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                if !recognizedText.isEmpty {
-                    Text("Recognized Text:")
-                        .font(.headline)
-                        .padding(.top)
-                    
-                    Text(recognizedText)
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .padding()
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            
             ScrollView {
                 ZStack {
                     ForEach(rectangles) { rectangle in
@@ -109,12 +78,25 @@ struct ContentView: View {
                             Rectangle()
                                 .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
                                 .frame(width: rectangle.size.width, height: rectangle.size.height)
-                            Text(rectangle.text)
-                                .foregroundColor(.black)
-                                .padding()
-                                .frame(width: rectangle.size.width - 16, height: rectangle.size.height - 16, alignment: .topLeading)
-                                .lineLimit(nil)
-                                .multilineTextAlignment(.leading)
+                            TextEditor(text: Binding(
+                                get: {
+                                    rectangles.first(where: { $0.id == rectangle.id })?.text ?? ""
+                                },
+                                set: { newValue in
+                                    if let idx = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
+                                        rectangles[idx].text = newValue
+                                    }
+                                }
+                            ))
+                            .foregroundColor(.black)
+                            .padding(4)
+                            .frame(width: rectangle.size.width - 16, height: rectangle.size.height - 16, alignment: .topLeading)
+                            .background(Color.clear)
+                            .cornerRadius(8)
+                            .lineLimit(nil)
+                            .multilineTextAlignment(.leading)
+                            .opacity(selectedNoteID == rectangle.id ? 1.0 : 0.7)
+                            .disabled(selectedNoteID != rectangle.id)
                         }
                         .position(rectangle.position)
                         .gesture(
@@ -293,37 +275,6 @@ struct NoteWindowView: View {
                 .cornerRadius(10)
             }
             
-            // Voice Recognition Section
-            VStack(spacing: 15) {
-                Button(isRecording ? "Stop Recording" : "Tap to Speak") {
-                    if isRecording {
-                        stopRecording()
-                    } else {
-                        startRecording()
-                    }
-                }
-                .font(.headline)
-                .padding()
-                .background(isRecording ? Color.red : Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
-                
-                if !recognizedText.isEmpty {
-                    Text("Recognized Text:")
-                        .font(.headline)
-                        .padding(.top)
-                    
-                    Text(recognizedText)
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .padding()
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            
             ScrollView {
                 ZStack {
                     ForEach(rectangles) { rectangle in
@@ -331,12 +282,25 @@ struct NoteWindowView: View {
                             Rectangle()
                                 .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
                                 .frame(width: rectangle.size.width, height: rectangle.size.height)
-                            Text(rectangle.text)
-                                .foregroundColor(.black)
-                                .padding()
-                                .frame(width: rectangle.size.width - 16, height: rectangle.size.height - 16, alignment: .topLeading)
-                                .lineLimit(nil)
-                                .multilineTextAlignment(.leading)
+                            TextEditor(text: Binding(
+                                get: {
+                                    rectangles.first(where: { $0.id == rectangle.id })?.text ?? ""
+                                },
+                                set: { newValue in
+                                    if let idx = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
+                                        rectangles[idx].text = newValue
+                                    }
+                                }
+                            ))
+                            .foregroundColor(.black)
+                            .padding(4)
+                            .frame(width: rectangle.size.width - 16, height: rectangle.size.height - 16, alignment: .topLeading)
+                            .background(Color.clear)
+                            .cornerRadius(8)
+                            .lineLimit(nil)
+                            .multilineTextAlignment(.leading)
+                            .opacity(selectedNoteID == rectangle.id ? 1.0 : 0.7)
+                            .disabled(selectedNoteID != rectangle.id)
                         }
                         .position(rectangle.position)
                         .gesture(
