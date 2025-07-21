@@ -89,22 +89,30 @@ struct ContentView: View {
             ScrollView {
                 ZStack {
                     ForEach(rectangles) { rectangle in
-                        Rectangle()
-                            .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
-                            .frame(width: rectangle.size.width, height: rectangle.size.height)
-                            .position(rectangle.position)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
-                                            rectangles[index].position = value.location
-                                            selectedNoteID = rectangle.id // Select on drag
-                                        }
+                        ZStack {
+                            Rectangle()
+                                .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
+                                .frame(width: rectangle.size.width, height: rectangle.size.height)
+                            Text(rectangle.text)
+                                .foregroundColor(.black)
+                                .padding()
+                                .frame(width: rectangle.size.width - 16, height: rectangle.size.height - 16, alignment: .topLeading)
+                                .lineLimit(nil)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .position(rectangle.position)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
+                                        rectangles[index].position = value.location
+                                        selectedNoteID = rectangle.id // Select on drag
                                     }
-                            )
-                            .onTapGesture {
-                                selectedNoteID = rectangle.id
-                            }
+                                }
+                        )
+                        .onTapGesture {
+                            selectedNoteID = rectangle.id
+                        }
                     }
                 }
                 .frame(minHeight: 600)
@@ -160,6 +168,10 @@ struct ContentView: View {
             if let result = result {
                 DispatchQueue.main.async {
                     self.recognizedText = result.bestTranscription.formattedString
+                    // Only update note text if this is the final result
+                    if result.isFinal, let selectedID = self.selectedNoteID, let idx = self.rectangles.firstIndex(where: { $0.id == selectedID }) {
+                        self.rectangles[idx].text = self.recognizedText
+                    }
                 }
             }
             
@@ -187,6 +199,11 @@ struct ContentView: View {
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         isRecording = false
+        
+        // Ensure the note text is set to the final recognized text
+        if let selectedID = self.selectedNoteID, let idx = self.rectangles.firstIndex(where: { $0.id == selectedID }) {
+            self.rectangles[idx].text = self.recognizedText
+        }
         
         // Deactivate audio session
         do {
@@ -278,22 +295,30 @@ struct NoteWindowView: View {
             ScrollView {
                 ZStack {
                     ForEach(rectangles) { rectangle in
-                        Rectangle()
-                            .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
-                            .frame(width: rectangle.size.width, height: rectangle.size.height)
-                            .position(rectangle.position)
-                            .gesture(
-                                DragGesture()
-                                    .onChanged { value in
-                                        if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
-                                            rectangles[index].position = value.location
-                                            selectedNoteID = rectangle.id // Select on drag
-                                        }
+                        ZStack {
+                            Rectangle()
+                                .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
+                                .frame(width: rectangle.size.width, height: rectangle.size.height)
+                            Text(rectangle.text)
+                                .foregroundColor(.black)
+                                .padding()
+                                .frame(width: rectangle.size.width - 16, height: rectangle.size.height - 16, alignment: .topLeading)
+                                .lineLimit(nil)
+                                .multilineTextAlignment(.leading)
+                        }
+                        .position(rectangle.position)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { value in
+                                    if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
+                                        rectangles[index].position = value.location
+                                        selectedNoteID = rectangle.id // Select on drag
                                     }
-                            )
-                            .onTapGesture {
-                                selectedNoteID = rectangle.id
-                            }
+                                }
+                        )
+                        .onTapGesture {
+                            selectedNoteID = rectangle.id
+                        }
                     }
                 }
                 .frame(minHeight: 600)
@@ -349,6 +374,10 @@ struct NoteWindowView: View {
             if let result = result {
                 DispatchQueue.main.async {
                     self.recognizedText = result.bestTranscription.formattedString
+                    // Only update note text if this is the final result
+                    if result.isFinal, let selectedID = self.selectedNoteID, let idx = self.rectangles.firstIndex(where: { $0.id == selectedID }) {
+                        self.rectangles[idx].text = self.recognizedText
+                    }
                 }
             }
             
@@ -377,6 +406,11 @@ struct NoteWindowView: View {
         recognitionTask?.cancel()
         isRecording = false
         
+        // Ensure the note text is set to the final recognized text
+        if let selectedID = self.selectedNoteID, let idx = self.rectangles.firstIndex(where: { $0.id == selectedID }) {
+            self.rectangles[idx].text = self.recognizedText
+        }
+        
         // Deactivate audio session
         do {
             try AVAudioSession.sharedInstance().setActive(false)
@@ -390,6 +424,7 @@ struct RectangleData: Identifiable {
     let id: UUID
     var position: CGPoint
     var size: CGSize
+    var text: String = ""
 }
 
 #Preview(windowStyle: .automatic) {
