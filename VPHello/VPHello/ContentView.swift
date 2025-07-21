@@ -21,12 +21,28 @@ struct ContentView: View {
     @State private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     @State private var recognitionTask: SFSpeechRecognitionTask?
     @State private var selectedNoteID: UUID? = nil
+    @State private var isEditingTitle = false
+    @State private var windowTitle = "Welcome to VPHello!"
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Welcome to VPHello!")
-                .font(.largeTitle)
-                .padding()
+            if isEditingTitle {
+                TextField("Window Title", text: $windowTitle, onCommit: { isEditingTitle = false })
+                    .font(.largeTitle)
+                    .padding(.horizontal)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { isEditingTitle = false }
+                    .onDisappear { isEditingTitle = false }
+                    .padding(.top)
+            } else {
+                Button(action: { isEditingTitle = true }) {
+                    Text(windowTitle)
+                        .font(.largeTitle)
+                        .padding(.horizontal)
+                }
+                .buttonStyle(TitleButtonStyle())
+                .padding(.top)
+            }
             
             HStack(spacing: 15) {
                 Button("Add Note") {
@@ -227,12 +243,28 @@ struct NoteWindowView: View {
     @State private var audioEngine = AVAudioEngine()
     @State private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     @State private var recognitionTask: SFSpeechRecognitionTask?
+    @State private var isEditingTitle = false
+    @State private var windowTitle = "New Window"
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("New Window")
-                .font(.largeTitle)
-                .padding()
+            if isEditingTitle {
+                TextField("Window Title", text: $windowTitle, onCommit: { isEditingTitle = false })
+                    .font(.largeTitle)
+                    .padding(.horizontal)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit { isEditingTitle = false }
+                    .onDisappear { isEditingTitle = false }
+                    .padding(.top)
+            } else {
+                Button(action: { isEditingTitle = true }) {
+                    Text(windowTitle)
+                        .font(.largeTitle)
+                        .padding(.horizontal)
+                }
+                .buttonStyle(TitleButtonStyle())
+                .padding(.top)
+            }
             
             HStack(spacing: 15) {
                 Button("Add Note") {
@@ -429,4 +461,17 @@ struct RectangleData: Identifiable {
 
 #Preview(windowStyle: .automatic) {
     ContentView(windowCount: .constant(1))
+}
+
+struct TitleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
+            .background(configuration.isPressed ? Color.blue.opacity(0.7) : Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
 }
