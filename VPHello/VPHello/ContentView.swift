@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var audioEngine = AVAudioEngine()
     @State private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     @State private var recognitionTask: SFSpeechRecognitionTask?
+    @State private var selectedNoteID: UUID? = nil
     
     var body: some View {
         VStack(spacing: 20) {
@@ -89,7 +90,7 @@ struct ContentView: View {
                 ZStack {
                     ForEach(rectangles) { rectangle in
                         Rectangle()
-                            .fill(Color.white)
+                            .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
                             .frame(width: rectangle.size.width, height: rectangle.size.height)
                             .position(rectangle.position)
                             .gesture(
@@ -97,9 +98,13 @@ struct ContentView: View {
                                     .onChanged { value in
                                         if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
                                             rectangles[index].position = value.location
+                                            selectedNoteID = rectangle.id // Select on drag
                                         }
                                     }
                             )
+                            .onTapGesture {
+                                selectedNoteID = rectangle.id
+                            }
                     }
                 }
                 .frame(minHeight: 600)
@@ -196,6 +201,7 @@ struct NoteWindowView: View {
     let windowID: Int
     @State private var rectangles: [RectangleData] = []
     @State private var windowSize: CGSize = CGSize(width: 400, height: 600)
+    @State private var selectedNoteID: UUID? = nil
     
     var body: some View {
         VStack(spacing: 20) {
@@ -223,7 +229,7 @@ struct NoteWindowView: View {
                 ZStack {
                     ForEach(rectangles) { rectangle in
                         Rectangle()
-                            .fill(Color.white)
+                            .fill(selectedNoteID == rectangle.id ? Color.gray : Color.white)
                             .frame(width: rectangle.size.width, height: rectangle.size.height)
                             .position(rectangle.position)
                             .gesture(
@@ -231,9 +237,13 @@ struct NoteWindowView: View {
                                     .onChanged { value in
                                         if let index = rectangles.firstIndex(where: { $0.id == rectangle.id }) {
                                             rectangles[index].position = value.location
+                                            selectedNoteID = rectangle.id // Select on drag
                                         }
                                     }
                             )
+                            .onTapGesture {
+                                selectedNoteID = rectangle.id
+                            }
                     }
                 }
                 .frame(minHeight: 600)
