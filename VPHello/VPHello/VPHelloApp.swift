@@ -15,9 +15,11 @@ struct VPHelloApp: App {
         WindowGroup("Note Window", id: "main") {
             ContentView(windowCount: $windowCount)
         }
+        .defaultSize(width: 1750, height: 1250)
         
         WindowGroup("Note Window", id: "noteWindow") {
             NoteWindowView(windowID: windowCount)
         }
+        .defaultSize(width: 1750, height: 1250)
     }
 }
